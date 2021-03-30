@@ -24,3 +24,9 @@ utility/
 ^CRAN-RELEASE$
 ^codecov\.yml$
 ^pkgdown$
+^\.Rbuild$
+^\.Rprofile$
+^build\.properties$
+^dist$
+^Jenkinsfile$
+^tools$
