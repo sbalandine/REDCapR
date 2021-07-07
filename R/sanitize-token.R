@@ -20,21 +20,26 @@
 #' REDCapR::sanitize_token(secret_token_2)
 
 #' @export
-sanitize_token <- function(token) {
-  pattern <- "^([0-9A-F]{32})(?:\\n)?$"
+sanitize_token <- function(token, super = FALSE) {
+
+  if(super) 
+    token_nchar <- 64 else 
+    token_nchar <- 32
+
+  pattern <- sprintf("^([0-9A-F]{%s})(?:\\n)?$", token_nchar)
 
   if (is.na(token)) {
     stop(
-      "The token is `NA`, not a valid 32-character hexademical value."
+      sprintf("The token is `NA`, not a valid %s-character hexademical value.", token_nchar)
     )
   } else if (nchar(token) == 0L) {
     stop(
       "The token is an empty string, ",
-      "not a valid 32-character hexademical value."
+      sprintf("not a valid %s-character hexademical value.", token_nchar)
     )
   } else if (!grepl(pattern, token, perl = TRUE)) {
     stop(
-      "The token is not a valid 32-character hexademical value."
+      sprintf("The token is not a valid %s-character hexademical value.", token_nchar)
     )
   }
 

@@ -65,7 +65,6 @@ redcap_users_read <- function(
 
   # This is the important line that communicates with the REDCap server.
   kernel <- kernel_api(redcap_uri, post_body, config_options)
-browser()
 
   if (kernel$success) {
 

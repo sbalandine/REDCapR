@@ -40,6 +40,119 @@
 #' ds_skinny$sex <- sex_original
 #' project$write(ds_skinny)
 #' }
+#' 
+RedcapProject <-
+  R6::R6Class(
+    classname = 'RedcapProject',
+
+    private = list(
+
+      .redcap_uri = NULL,
+      .redcap_token= NULL
+
+    ),
+
+    public = list(
+
+      initialize = function(
+        redcap_uri, 
+        redcap_token = NA_character_
+      ) {
+        private$.redcap_uri = redcap_uri
+        private$.redcap_token= redcap_token
+
+        checkmate::assert_character(private$.redcap_uri  , any.missing = FALSE, len = 1, pattern = "^.{1,}$")
+        checkmate::assert_character(private$.redcap_token, any.missing = TRUE , len = 1, pattern = "^.{1,}$")
+      },
+
+      createProject = function(
+        redcap_super_token = NULL,
+        title,
+        notes = '',
+        purpose = 0,
+        purpose_other = '',
+        is_longitudinal = FALSE,
+        is_survey = FALSE,
+        is_autonumbering = FALSE,
+        verbose = TRUE,
+        config_options  = NULL
+      ) {
+
+        csv_elements <- NULL #This prevents the R CHECK NOTE: 'No visible binding for global variable Note in R CMD check';  Also see  if( getRversion() >= "2.15.1" )    utils::globalVariables(names=c("csv_elements")) #http://stackoverflow.com/questions/8096313/no-visible-binding-for-global-variable-note-in-r-cmd-check; http://stackoverflow.com/questions/9439256/how-can-i-handle-r-cmd-check-no-visible-binding-for-global-variable-notes-when
+
+        checkmate::assert_character(redcap_super_token, any.missing = FALSE, len = 1, pattern = "^.{1,}$")
+
+        token   <- sanitize_token(redcap_super_token, super = TRUE)
+        verbose <- verbose_prepare(verbose)
+
+        data <- 
+          data.frame(
+            project_title=title,
+            purpose=purpose,
+            purpose_other=purpose_other,
+            project_notes=notes,
+            is_longitudinal = as.integer(is_longitudinal), 
+            surveys_enabled = as.integer(is_survey), 
+            record_autonumbering_enabled= as.integer(is_autonumbering)
+          )
+
+        con     <-  base::textConnection(
+          object  = "csv_elements",
+          open    = "w",
+          local   = TRUE
+        )
+        utils::write.csv(data, con, row.names = FALSE, na = "")
+        close(con)
+
+        csv     <- paste(csv_elements, collapse = "\n")
+        rm(csv_elements, con)
+
+        post_body <- list(
+          token         = token,
+          content       = "project",
+          format        = "csv",
+          data          = csv,
+          returnFormat  = "csv"
+        )
+
+        # This is the important line that communicates with the REDCap server.
+        kernel <- kernel_api(private$.redcap_uri, post_body, config_options)
+
+        if (kernel$success) {
+
+          outcome_message       <- sprintf(
+            "Project created in %0.1f seconds.",
+            kernel$elapsed_seconds
+          )
+
+          # If an operation is successful, the `raw_text` is no longer returned to save RAM.  The content is not really necessary with httr's status message exposed.
+          kernel$raw_text <- ""
+
+        } else { # If the returned content wasn't recognized as a valid integer, then
+
+          outcome_message        <- sprintf(
+            "The REDCapR project creation operation was not successful.  The error message was:\n%s",
+            kernel$raw_text
+          )
+
+        }
+
+        if (verbose)
+          message(outcome_message)
+
+        list(
+          success                   = kernel$success,
+          status_code               = kernel$status_code,
+          outcome_message           = outcome_message,
+          elapsed_seconds           = kernel$elapsed_seconds,
+          raw_text                  = kernel$raw_text
+        )
+      }
+    ),
+
+    active = list(
+    )
+  )
 
 redcap_project <- setRefClass(
   Class = "redcap_project",

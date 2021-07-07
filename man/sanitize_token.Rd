@@ -4,7 +4,7 @@
 \alias{sanitize_token}
 \title{Validate and sanitize the user's REDCap token}
 \usage{
-sanitize_token(token)
+sanitize_token(token, super = FALSE)
 }
 \arguments{
 \item{token}{The REDCap token. Required.}

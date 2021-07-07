@@ -40,11 +40,11 @@
 #' \dontrun{
 #' uri   <- "https://bbmc.ouhsc.edu/redcap/api/"
 #' token <- "9A81268476645C4E5F03428B8AC3AA7B"
-#' REDCapR::redcap_instruments_event_read(redcap_uri=uri, token=token)
+#' REDCapR::redcap_events_instrument_read(redcap_uri=uri, token=token)
 #' }
 
 #' @export
-redcap_instruments_event_read <- function(
+redcap_events_instrument_read <- function(
   redcap_uri,
   token,
   verbose           = TRUE,
